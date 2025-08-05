@@ -4,7 +4,22 @@ from .serializers import UserProfileSerializer, ComplaintSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from django.contrib.auth import authenticate
+from rest_framework.decorators import api_view
 # Create your views here.
+
+@api_view(['POST'])
+def login_view(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+    print("test auth")
+    user = authenticate(username=username, password=password)
+    print(user)
+    if user is not None:
+        return Response({"message": "Login successful!"})
+    else:
+        return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 class ComplaintViewSet(viewsets.ModelViewSet):
     http_method_names = ['get']
@@ -40,71 +55,74 @@ class ComplaintViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 class OpenCasesViewSet(viewsets.ModelViewSet):
-  http_method_names = ['get']
-  serializer_class = ComplaintSerializer
-  permission_classes = [IsAuthenticated]
-    
-  def get_queryset(self, user):
-      try:
-          # Step 1: Get the user's profile to find their district
-          user_profile = UserProfile.objects.get(user=user)
-          district_number = user_profile.district
-            
-          if district_number:
-              # Step 2: Convert district format from "1" to "NYCC01"
-              # district_number is like "1", "2", "10", "42" (no zero-padding)
-              # We need to convert to "NYCC01", "NYCC02", "NYCC10", "NYCC42"
-              district_code = f"NYCC{district_number.zfill(2)}"
-                
-              # Step 3: Filter complaints where account matches user's district
-              return Complaint.objects.filter(account=district_code, closedate__isnull=True)
-      except UserProfile.DoesNotExist:
-          pass
+    http_method_names = ['get']
+    serializer_class = ComplaintSerializer
+    permission_classes = [IsAuthenticated]
         
-      return Complaint.objects.none()
-  def list(self, request):
-    user = request.user
-    # Get only the open complaints from the user's district
-    queryset = self.get_queryset(user)
-    serializer = self.get_serializer(queryset, many=True)
-    return Response(serializer.data)
+    def get_queryset(self):
+
+        user = self.request.user
+        try:
+            # Step 1: Get the user's profile to find their district
+            user_profile = UserProfile.objects.get(user=user)
+            district_number = user_profile.district
+                
+            if district_number:
+                # Step 2: Convert district format from "1" to "NYCC01"
+                # district_number is like "1", "2", "10", "42" (no zero-padding)
+                # We need to convert to "NYCC01", "NYCC02", "NYCC10", "NYCC42"
+                district_code = f"NYCC{district_number.zfill(2)}"
+                    
+                # Step 3: Filter complaints where account matches user's district
+                return Complaint.objects.filter(account=district_code, closedate__isnull=True)
+        except UserProfile.DoesNotExist:
+            pass
+            
+        return Complaint.objects.none()
+    def list(self, request):
+        # Get only the open complaints from the user's district
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class ClosedCasesViewSet(viewsets.ModelViewSet):
-  http_method_names = ['get'] 
-  serializer_class = ComplaintSerializer
-  permission_classes = [IsAuthenticated]
-    
-  def get_queryset(self, user):
-      try:
-          # Step 1: Get the user's profile to find their district
-          user_profile = UserProfile.objects.get(user=user)
-          district_number = user_profile.district
-            
-          if district_number:
-              # Step 2: Convert district format from "1" to "NYCC01"
-              # district_number is like "1", "2", "10", "42" (no zero-padding)
-              # We need to convert to "NYCC01", "NYCC02", "NYCC10", "NYCC42"
-              district_code = f"NYCC{district_number.zfill(2)}"
-                
-              # Step 3: Filter complaints where account matches user's district
-              return Complaint.objects.filter(account=district_code, closedate__isnull=True)
-      except UserProfile.DoesNotExist:
-          pass
+    http_method_names = ['get'] 
+    serializer_class = ComplaintSerializer
+    permission_classes = [IsAuthenticated]
         
-      return Complaint.objects.none()
-  def list(self, request):
-    user = request.user
-    # Get only complaints that are close from the user's district
-    queryset = self.get_queryset(user)
-    serializer = self.get_serializer(queryset, many=True)
-    return Response(serializer.data)
+    def get_queryset(self):
+        user = self.request.user
+        try:
+            # Step 1: Get the user's profile to find their district
+            user_profile = UserProfile.objects.get(user=user)
+            district_number = user_profile.district
+                
+            if district_number:
+                # Step 2: Convert district format from "1" to "NYCC01"
+                # district_number is like "1", "2", "10", "42" (no zero-padding)
+                # We need to convert to "NYCC01", "NYCC02", "NYCC10", "NYCC42"
+                district_code = f"NYCC{district_number.zfill(2)}"
+                    
+                # Step 3: Filter complaints where account matches user's district
+                return Complaint.objects.filter(account=district_code, closedate__isnull=False)
+        except UserProfile.DoesNotExist:
+            pass
+            
+        return Complaint.objects.none()
+    def list(self, request):
+        
+        # Get only complaints that are close from the user's district
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
     
 class TopComplaintTypeViewSet(viewsets.ModelViewSet):
     http_method_names = ['get']
     serializer_class = ComplaintSerializer
     permission_classes = [IsAuthenticated]
     
-    def get_queryset(self, user):
+    def get_queryset(self):
+        user = self.request.user
         try:
             # Step 1: Get the user's profile to find their district
             user_profile = UserProfile.objects.get(user=user)
@@ -114,7 +132,6 @@ class TopComplaintTypeViewSet(viewsets.ModelViewSet):
                 # Step 2: Convert district format from "1" to "NYCC01"
                 district_code = f"NYCC{district_number.zfill(2)}"
                 
-                # Step 3: Get top 3 complaint types by count
                 from django.db.models import Count
                 top_complaints = Complaint.objects.filter(
                     account=district_code,
@@ -137,8 +154,7 @@ class TopComplaintTypeViewSet(viewsets.ModelViewSet):
         return Complaint.objects.none()
     
     def list(self, request):
-        user = request.user
         # Get the top 3 complaint types from the user's district
-        queryset = self.get_queryset(user)
+        queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
