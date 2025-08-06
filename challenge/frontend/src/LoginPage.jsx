@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const LoginPage = ({ setToken }) => {
+const LoginPage = ({ setToken, setUser }) => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -21,7 +21,8 @@ const LoginPage = ({ setToken }) => {
 
             const token = response.data.token;
             setToken(token);
-
+            setUser(username);
+            console.log("user ", username)
             console.log("Login successful. Token:", token);
 
             // Redirect or call a protected API
