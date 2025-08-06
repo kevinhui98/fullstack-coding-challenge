@@ -23,6 +23,7 @@ const Dashboard = ({ token, onLogout, user }) => {
     const [closedCases, setClosedCases] = useState([]);
     const [topComplaint, setTopComplaint] = useState('');
     const [complaints, setComplaints] = useState([]);
+    // const [myDistrict, setMyDistrict] = useState([]);
 
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -67,7 +68,23 @@ const Dashboard = ({ token, onLogout, user }) => {
             .then(res => setComplaints(res.data))
             .catch(err => console.error('Error fetching all complaints:', err));
     }, [token]);
+    const fetchDistrictComplaints = () => {
+        const headers = {
+            Authorization: `Token ${token}`,
+        };
 
+        axios
+            .get('http://localhost:8000/api/complaints/myDistrict/', { headers })
+            .then(res => {
+                setComplaints(res.data)
+                // setMyDistrict(res.data);
+                setPage(0);
+            })
+            .catch(err => {
+                console.error("Error fetching district complaints:", err);
+            });
+
+    };
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
     };
@@ -81,33 +98,42 @@ const Dashboard = ({ token, onLogout, user }) => {
         <>
             <Header name={"Dashboard"} token={token} onLogout={onLogout} user={user} />
             <Container sx={{ py: 2, width: "100%" }}>
-                <Grid container spacing={2} sx={{ mt: 2 }}>
-                    <Grid item xs={12} md={4}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h6">Open Cases</Typography>
-                                <Typography variant="h4">{openCases.length}</Typography>
-                            </CardContent>
-                        </Card>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Grid container spacing={2} sx={{ mt: 2 }}>
+                        <Grid item xs={12} md={4}>
+                            <Card>
+                                <CardContent>
+                                    <Typography variant="h6">Open Cases</Typography>
+                                    <Typography variant="h4">{openCases.length}</Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                            <Card>
+                                <CardContent>
+                                    <Typography variant="h6">Closed Cases</Typography>
+                                    <Typography variant="h4">{closedCases.length}</Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={12} md={4}>
+                            <Card>
+                                <CardContent>
+                                    <Typography variant="h6">Top Complaint Type</Typography>
+                                    <br />
+                                    <Typography variant="body1">{topComplaint || '—'}</Typography>
+                                </CardContent>
+                            </Card>
+                        </Grid>
                     </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h6">Closed Cases</Typography>
-                                <Typography variant="h4">{closedCases.length}</Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Card>
-                            <CardContent>
-                                <Typography variant="h6">Top Complaint Type</Typography>
-                                <br />
-                                <Typography variant="body1">{topComplaint || '—'}</Typography>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
+                    <Box sx={{
+                        alignContent: 'end',
+                    }}>
+                        <Button variant="contained" color="primary" onClick={fetchDistrictComplaints}>
+                            Complaints by My Constituents
+                        </Button>
+                    </Box>
+                </Box>
 
                 <Box sx={{ mt: 5, mb: 10 }}>
                     <Typography variant="h5" gutterBottom>
