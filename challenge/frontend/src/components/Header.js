@@ -1,7 +1,7 @@
 import React from 'react';
 import { Typography, Button, Box, AppBar, Toolbar, Container } from '@mui/material';
 
-const Header = ({ name, onLogout, user }) => {
+const Header = ({ name, onLogout = null, user = null }) => {
     return (
         <AppBar position="static" color="primary" elevation={2}>
             <Container maxWidth="xl">
@@ -30,20 +30,22 @@ const Header = ({ name, onLogout, user }) => {
                         <Typography variant="h6" sx={{ fontWeight: 500 }}>
                             {user}
                         </Typography>
-                        <Button
-                            variant="outlined"
-                            color="inherit"
-                            size="small"
-                            onClick={onLogout}
-                            sx={{
-                                transition: 'background-color 0.3s',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.1)', // light transparent white
-                                },
-                            }}
-                        >
-                            Logout
-                        </Button>
+                        {onLogout &&
+                            <Button
+                                variant="outlined"
+                                color="inherit"
+                                size="small"
+                                onClick={onLogout}
+                                sx={{
+                                    transition: 'background-color 0.3s',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)', // light transparent white
+                                    },
+                                }}
+                            >
+                                Logout
+                            </Button>
+                        }
                     </Box>
                 </Toolbar>
             </Container>
