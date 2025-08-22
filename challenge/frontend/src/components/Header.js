@@ -16,9 +16,6 @@ const Header = ({ name, onLogout = null, user = null }) => {
                     <Typography variant="h4" component="div" sx={{ flexGrow: 1 }}>
                         {name}
                     </Typography>
-                    {/* <Typography variant="body2" sx={{ mb: 2 }}>
-                        Your token: {token}
-                    </Typography> */}
                     <Box
                         sx={{
                             display: 'flex',
